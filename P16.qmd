@@ -1,0 +1,87 @@
+---
+title: "p16"
+author: "Isahakh Mohamud"
+format:
+  html:
+    embed-resources: true
+---
+
+## Introduction
+
+For this assignment, I am using The Wonderful Wizard of Oz by L. Frank Baum. I wanted to use a fantasy novel and see how its words can be organized into a tidy dataframe. I will follow the workflow from Chapter 1 of Text Mining with R.
+
+## 1. Import Text
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(gutenbergr)
+
+dir.create("data", showWarnings = FALSE)
+
+if (!file.exists("data/oz.csv")) {
+  oz_download <- gutenberg_download(55)
+  write_csv(oz_download, "data/oz.csv")
+}
+
+oz <- read_csv("data/oz.csv", show_col_types = FALSE) |>
+  mutate(line = row_number())
+
+oz
+```
+
+
+## 2. Make the Text Tidy
+
+```{r}
+tidy_oz <- oz |>
+  unnest_tokens(word, text)
+
+tidy_oz
+```
+
+
+## 3. Count Words
+
+```{r}
+word_counts <- tidy_oz |>
+  count(word, sort = TRUE)
+
+head(word_counts, 10)
+```
+
+
+## 4. Remove Stop Words
+
+```{r}
+oz_words <- tidy_oz |>
+  anti_join(stop_words, by = "word")
+
+word_counts2 <- oz_words |>
+  count(word, sort = TRUE)
+
+head(word_counts2, 10)
+```
+
+
+## 5. Plot the Most Common Words
+
+```{r}
+word_counts2 |>
+  slice_max(n, n = 10, with_ties = FALSE) |>
+  ggplot(aes(x = reorder(word, n), y = n)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "Most Common Words in The Wonderful Wizard of Oz",
+    x = "Word",
+    y = "Number of Times Used"
+  )
+```
+
+
+## References
+
+Baum, L. Frank. The Wonderful Wizard of Oz. Project Gutenberg, eBook 55. https://www.gutenberg.org/ebooks/55
+
+Silge, Julia, and David Robinson. Text Mining with R: A Tidy Approach, Chapter 1. https://www.tidytextmining.com/tidytext.html
